@@ -33,9 +33,8 @@ body {
 .container {
   font-family: monospace;
   margin: auto;
-  width: 370px;
-
   height: 80vh;
+  width: 370px;
   font-style: italic;
   user-select: none;
   letter-spacing: 1.5px;
@@ -132,6 +131,7 @@ body {
   border: 1px solid currentColor;
 }
 
+.container.complete,
 .bad-debt.complete {
   font-size: 50px;
   color: #00ffe5;

@@ -4,80 +4,157 @@
 
 
 
-
 */
 const bankDebtReminder = (() => {
-  const remaining = document.querySelector('.remaining');
-  const badDebt = document.querySelector('.bad-debt');
-  const pays = document.querySelectorAll('.payment');
-  const days = document.querySelectorAll('.days');
-  const plan = document.querySelector('.plan');
-  const save = document.querySelector('.save');
-  const reset = document.querySelector('.reset');
-  let standDebt = localStorage.getItem('standDebt'),
-    outsValue = 0;
-
-  const renderBadDebt = (element, total, pays, days) => {
-    if (element && total) {
-      element.innerText = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    }
-    renderDays(pays, days, total);
-    return total;
+  // Constants and Selectors
+  const SELECTORS = {
+    remaining: '.remaining',
+    container: '.container',
+    badDebt: '.bad-debt',
+    payment: '.payment',
+    days: '.days',
+    plan: '.plan',
+    save: '.save',
+    reset: '.reset',
   };
 
-  const renderDays = (pays, days, total) => {
-    pays.forEach((pay, i) => {
-      days[i].innerText = Math.ceil(total / (pay.innerText * 1000));
+  let currentDebt = localStorage.getItem('standDebt');
+  if (currentDebt === null) {
+    currentDebt = 70000000;
+    localStorage.setItem('standDebt', currentDebt);
+  } else {
+    currentDebt = Number(currentDebt);
+  }
+
+  let outstandingDebt = 0;
+
+  // Helper Functions
+  const queryElement = (selector) => document.querySelector(selector);
+  const queryElements = (selector) => document.querySelectorAll(selector);
+  const formatNumber = (number) => number.toLocaleString('de-DE');
+
+  const parseFormattedNumber = (str) => {
+    return parseFloat(str.replace(/\./g, '').replace(',', '.'));
+  };
+
+  const updateElementText = (element, text) => {
+    if (element) {
+      element.innerText = text;
+    }
+  };
+
+  // DOM Elements
+  const remainingElement = queryElement(SELECTORS.remaining);
+  const badDebtElement = queryElement(SELECTORS.badDebt);
+  const paymentElements = queryElements(SELECTORS.payment);
+  const daysElements = queryElements(SELECTORS.days);
+  const planElement = queryElement(SELECTORS.plan);
+  const saveButton = queryElement(SELECTORS.save);
+  const resetButton = queryElement(SELECTORS.reset);
+
+  // Initial Setup
+  const initialize = () => {
+    console.log(currentDebt);
+    if (currentDebt === 0) {
+      completeDebtProcess();
+    } else {
+      outstandingDebt = renderBadDebt(badDebtElement, currentDebt);
+    }
+    attachEventListeners();
+  };
+
+  // Rendering Functions
+  const renderBadDebt = (element, debt) => {
+    if (typeof debt !== 'number' || isNaN(debt)) {
+      debt = '00';
+    }
+    const formattedDebt = formatNumber(debt);
+    updateElementText(element, formattedDebt);
+    renderDays(debt);
+    return debt;
+  };
+
+  const renderDays = (totalDebt) => {
+    paymentElements.forEach((payment, index) => {
+      const paymentValue = parseFormattedNumber(payment.innerText) || 0;
+      const days = Math.ceil(totalDebt / (paymentValue * 1000)) || 0;
+      updateElementText(daysElements[index], days);
     });
   };
 
-  if (standDebt === null) {
-    localStorage.setItem('standDebt', 70000000);
-    standDebt = localStorage.getItem('standDebt');
-  }
+  // Event Handlers
+  const handlePlanInput = (event) => {
+    event.preventDefault();
+    const sanitizedValue = planElement.value.replace(/[^0-9]/g, '');
+    planElement.value = sanitizedValue;
 
-  if (badDebt && standDebt) {
-    outsValue = Number(renderBadDebt(badDebt, standDebt, pays, days));
-  }
+    if (sanitizedValue && outstandingDebt !== 0) {
+      const remainingDebt = outstandingDebt - parseFloat(sanitizedValue);
+      updateElementText(remainingElement, formatNumber(Math.max(remainingDebt, 0)));
+      renderDays(Math.max(remainingDebt, 0));
+    }
+  };
 
-  if (plan) {
-    plan.oninput = (event) => {
-      event.preventDefault();
-      const value = (plan.value = plan.value.replace(/[^0-9]/g, ''));
-      if (value && outsValue !== 0 && remaining) {
-        remaining.innerText = outsValue - value;
-        renderDays(pays, days, outsValue - value);
+  const handleSave = (event) => {
+    event.preventDefault();
+    const remainingText = remainingElement.innerText;
+    const remainingValue = parseFormattedNumber(remainingText) || 0;
+    if (remainingValue !== 0) {
+      localStorage.setItem('standDebt', remainingValue);
+      currentDebt = remainingValue;
+      outstandingDebt = renderBadDebt(badDebtElement, currentDebt);
+      updateElementText(remainingElement, '0000');
+    } else {
+      completeDebtProcess();
+    }
+    planElement.focus();
+  };
+
+  const handleReset = (event) => {
+    event.preventDefault();
+    const planValue = parseFloat(planElement.value.replace(/[^0-9]/g, '')) || 0;
+    if (planValue > 0) {
+      currentDebt = planValue;
+      outstandingDebt = renderBadDebt(badDebtElement, currentDebt);
+      updateElementText(remainingElement, '0000');
+      if (confirm('Are you sure you want to add this item locally?')) {
+        localStorage.setItem('standDebt', planElement.value);
+        planElement.focus();
       }
-    };
-    plan.onfocus = () => {
-      plan.value = '';
-    };
-  }
+      checkIfComplete(outstandingDebt);
+    }
+  };
 
-  if (save) {
-    save.onclick = () => {
-      if (remaining.innerText !== '0000') {
-        localStorage.setItem('standDebt', remaining.innerText);
-        standDebt = remaining.innerText;
-        remaining.innerText = '0000';
-        outsValue = Number(renderBadDebt(badDebt, standDebt, pays, days));
-      }
-      plan.focus();
-    };
-  }
+  const checkIfComplete = (debt) => {
+    if (debt === 0) completeDebtProcess();
+  };
 
-  if (reset) {
-    reset.onclick = (event) => {
-      event.preventDefault();
-      if (plan.value) {
-        outsValue = Number(renderBadDebt(badDebt, plan.value, pays, days));
-        remaining.innerText = '0000';
-        const isConfirmed = confirm('Are you sure you want to add this item locally?');
-        if (isConfirmed) {
-          localStorage.setItem('standDebt', plan.value);
-          plan.focus();
-        }
-      }
-    };
-  }
+  const completeDebtProcess = () => {
+    currentDebt = 0;
+    outstandingDebt = 0;
+    updateElementText(badDebtElement, '0');
+    localStorage.setItem('standDebt', '0');
+    updateElementText(remainingElement, '0000');
+
+    const containerElement = queryElement(SELECTORS.container);
+    badDebtElement.classList.add('complete');
+    containerElement.classList.add('complete');
+  };
+
+  // Attach Event Listeners
+  const attachEventListeners = () => {
+    if (planElement) {
+      planElement.addEventListener('input', handlePlanInput);
+      planElement.addEventListener('focus', () => (planElement.value = ''));
+    }
+    if (saveButton) {
+      saveButton.addEventListener('click', handleSave);
+    }
+    if (resetButton) {
+      resetButton.addEventListener('click', handleReset);
+    }
+  };
+
+  // Initialize the module
+  initialize();
 })();
