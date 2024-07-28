@@ -1,8 +1,145 @@
 body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
+
+  background-image: linear-gradient(to top right, #ffd9df, #b7b7ff);
 }
 * {
   margin: 0;
   padding: 0;
+}
+
+.payment,
+.days,
+.reset,
+.save,
+.calc,
+.ctrl,
+.remaining,
+.bad-debt,
+.payment-level,
+.expected-debt,
+.equivalent,
+.solvency,
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  font-family: monospace;
+  width: 70%;
+  margin: auto;
+  font-style: italic;
+  user-select: none;
+  letter-spacing: 1.5px;
+}
+
+.expected-debt {
+  position: relative;
+  width: 200px;
+  height: 370px;
+  padding: 30px 20px;
+  border-radius: 10px;
+  background-color: #fff;
+  overflow: hidden;
+  transition: 0.5s;
+}
+
+.remaining,
+.bad-debt {
+  margin-bottom: 20px;
+  color: rgb(148, 0, 0);
+  font-size: 32px;
+  animation: hueRotate 10s linear infinite;
+}
+
+.expected-debt,
+.solvency {
+  flex-direction: column;
+  font-size: 16px;
+  row-gap: 8px;
+}
+.solvency {
+  color: #1100ff;
+}
+
+.payment-level,
+.equivalent {
+  gap: 10px;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.payment,
+.days {
+  width: 20%;
+}
+
+.equivalent {
+  color: #a60088;
+}
+
+.estimate {
+  margin-top: 10px;
+}
+.remaining {
+  padding: 10px;
+  color: #d16800;
+  font-size: 30px;
+  animation: hueRotate 5s linear infinite;
+}
+.plan {
+  padding: 10px;
+  border-radius: 8px;
+  font-style: italic;
+  border: 1px solid #87edff;
+  outline: none;
+  text-align: right;
+  color: #00911d;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+.ctrl {
+  justify-content: space-between;
+  padding: 10px 0;
+  margin-top: 20px;
+  gap: 16px;
+}
+
+.reset,
+.save {
+  margin-left: auto;
+  padding: 8px 16px;
+  width: 30%;
+  border-radius: 9999px;
+  background-color: #00178c;
+  border: 1px solid #1e3edd;
+  color: #ffdd00;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.reset {
+  color: #ff0e0e;
+  background-color: #ffe9e4;
+  border: 1px solid currentColor;
+}
+
+.bad-debt.complete {
+  font-size: 50px;
+  color: #00ffe5;
+  font-weight: 700;
+  font-style: normal;
+  animation: hueRotate 800ms linear infinite;
+}
+
+@keyframes hueRotate {
+  to {
+    filter: hue-rotate(720deg);
+  }
 }
